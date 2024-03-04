@@ -1,81 +1,217 @@
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include "db.h"
 
-#define loop for(;;)
 
-char* commands = "1) create\n2) print\n3) add\n4) edit\n5) find by phone\n6) find by name\n7) delete\n8) sort\n9) exit\n";
-bool db_is_up;
+int match_command(char* argv[]);
+int launch_command(int command_code, char* argv[]);
+bool is_enough_arguments(int command_code, int argcount);
+
+int create_new_base(char* base_name);
+int append_to_base(char* what_base, char* what);
+int find_mail_in_base(char* what_base, char* what_mail);
+int find_group_in_base(char* what_base, char* what_group);
+void print_base_struct(char* what_base, char* what);
+int sort_base(char* what_base, char* how);
+int edit(char* what_base, char* what, char* to_what);
+int delete_from_base(char* what_base, char* what);
 
 
-int main() {
-    int user_input;
-    char buffer[112];
+int main(int argc, char* argv[]) {
+    int cmd;
 
-    printf("Start of application\n");
-    FILE* Data = fopen("data", "r+");
-
-    if (Data != NULL) {
-        db_is_up = 1;
-        printf("The commands are:\n%s", commands);
-        printf("Please type the corresponding digit\n");
-    }
+    if (argc > 1)
+        cmd = match_command(argv);
     else {
-        printf("\033[31mError:\033[0mThe file is missing\n");
-        db_is_up = 0;
+        fprintf(stderr, "jdb: "RED"Error: "NC "No args supplied\n");
+        exit(1);
     }
 
-    //while (db_is_up) {
+    if (!is_enough_arguments(cmd, argc)) {
+        fprintf(stderr, "jdb: "RED"Error: "NC"Not enough args aupplied\n");
+        exit(2);
+    }
 
-    get_user_command(user_input);
-    handle_user_input(user_input);
+    launch_command(cmd, argv);
 
-    //}
     
-    fclose(Data);
     return 0;
 }
 
-void get_user_command(int command_code) {
-    int read = scanf("%d", &command_code);
 
-    if (read == 0) {
-        printf("\033[31mError:\033[0m failed to read user input\n");
-        abort();
+int match_command(char* arg[]) {
+
+    if (strcmp(arg[1], "create") == 0)
+        return 1;
+
+    if (strcmp(arg[1], "append") == 0)
+        return 2;
+
+    if (strcmp(arg[1], "findmail") == 0)
+        return 3;
+
+    if (strcmp(arg[1], "findgroup") == 0)
+        return 4;
+
+    if (strcmp(arg[1], "print") == 0)
+        return 5;
+
+    if (strcmp(arg[1], "edit") == 0)
+        return 6;
+
+    if (strcmp(arg[1], "sort") == 0)
+        return 7;
+
+    if (strcmp(arg[1], "delete") == 0)
+        return 8;
+
+    else {
+        fprintf(stderr, "jdb: "RED"Error: "NC"No command matched\n");
+        return -1;
     }
 }
 
-void handle_user_input(int command_code) {
-    int cmd_result;
+
+int launch_command(int command_code, char* argv[]) {
+    int status;
+
     switch (command_code) {
-    case 1:
-        cmd_result = create_new_database();
-        break;
-    case 2:
-        cmd_result = print_user_info();
-        break;
-    case 3:
-        cmd_result = add_user_info();
-        break;
-    case 4:
-        cmd_result = edit_user_info();
-        break;
-    case 5:
-        cmd_result = find_user_by_phone();
-        break;
-    case 6:
-        cmd_result = find_user_by_name();
-        break;
-    case 7:
-        cmd_result = delete_user_info();
-        break;
-    case 8:
-        cmd_result = sort_database_contants();
-        break;
-    case 9:
-        exit_app();
-        break;
+        case 1:
+            status = create_new_base(argv[2]);
+            break;
+        case 2:
+            status = append_to_base(argv[2], argv[3]);
+            break;
+        case 3:
+            status = find_mail_in_base(argv[2], argv[3]);
+            break;
+        case 4:
+            status = find_group_in_base(argv[2], argv[3]);
+            break;
+        case 5:
+            print_base_struct(argv[2], argv[3]);
+            break;
+        case 6:
+            status = sort_base(argv[2], argv[3]);
+            break;
+        case 7:
+            status = edit(argv[2], argv[3], argv[4]);
+            break;
+        case 8:
+            status = delete_from_base(argv[2], argv[3]);
+            break;
+    }
 
+    return status;
+
+}
+
+
+bool is_enough_arguments(int command_code, int argcount) {
+    switch (command_code) {
+        case 1: 
+            if (argcount == 3)
+                return 1;
+        case 2: 
+        case 3:
+        case 4:
+        case 5: 
+        case 6: 
+        case 8:
+            if (argcount == 3)
+                return 1;
+        case 7:
+            if(argcount == 5)
+                return 1;
+        default:
+            return 0;
     }
 }
+
+
+int create_new_base(char* base_name) {
+    int status;
+    FILE* NewBase = fopen(base_name, "w");
+    if (NewBase != NULL) {
+        status = 0;
+        fclose(NewBase);
+    }
+    else {
+        status = 3;
+        fprintf(stderr, "jdb: "RED"Error: "NC"Couldn't create file\n");
+    }
+    return status;
+
+}
+
+
+int append_to_base(char* what_base, char* what) {
+    int status = 0;
+    FILE* Base = fopen(what_base, "wr");
+    if (Base != NULL) {
+
+
+    }
+    else {
+        fprintf(stderr, "jdb: "RED"Error: "NC"Couldn't open %s\n",
+                what_base);
+    }
+
+    return status;
+}
+
+
+int find_mail_in_base(char* what_base, char* what_mail) {
+    int status = 0;
+    return status;
+}
+
+
+int find_group_in_base(char* what_base, char* what_group) {
+    int status = 0;
+    return status;
+}
+
+
+void print_base_struct(char* what_base, char* what) {
+    printf("Let's pretend that's what you wanted\n");
+}
+
+
+int sort_base(char* what_base, char* how) {
+    int status = 0;
+    return status;
+}
+
+
+int edit(char* what_base, char* what, char* to_what) {
+    int status = 0;
+    return status;
+}
+
+
+int delete_from_base(char* what_base, char* what) {
+    printf("%s", what);
+    char ans;
+    int status = 0;
+    /*
+    fprintf(stdout, "Are you sure you want to delete %s?\n[y/n]: ",
+            what);
+    fscanf(stdin, "%c", &ans);
+    if (ans == 'y') {
+        printf("OK\n");
+        // char* syscall = "rm " what;
+        // system("rm ");
+
+    }
+    else {
+        printf("that was close\n");
+
+    }
+    */
+    return status;
+}
+
+
